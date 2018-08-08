@@ -26,7 +26,7 @@ DigitalOut ledBlue(LED3, 1);
 
 Thread spi_thread;
 extern void thread_spi();
-#define LOCATION_THREAD_SLEEP 1
+#define LOCATION_THREAD_SLEEP 5
 
 /* This example program for the u-blox C030 and C027 boards instantiates
  * the gnss interface and waits for time/position to be received from a satellite.
@@ -43,7 +43,12 @@ int main()
 {
     spi_thread.start(thread_spi);
 
+#ifdef TARGET_NRF52840_DK
     GnssI2C gnss(I2C_SDA0, I2C_SCL0);
+#else
+    GnssI2C gnss(I2C_SDA, I2C_SCL);
+#endif
+
     int gnssReturnCode;
     int length;
     char buffer[256];
@@ -57,6 +62,7 @@ int main()
             gnssReturnCode = gnss.getMessage(buffer, sizeof(buffer));
             if (gnssReturnCode > 0)
             {
+
                 ledGreen = 0;
                 ledBlue = 1;
                 ledRed = 1;
@@ -121,13 +127,13 @@ int main()
                         }
                     }
                 }
+                wait(LOCATION_THREAD_SLEEP);
             }
-            wait(LOCATION_THREAD_SLEEP);
         }
     }
     else
     {
-        printf("Unable to initialise GNSS.\n");
+        printf("Unable to initialize GNSS.\n");
     }
 
     ledRed = 0;
